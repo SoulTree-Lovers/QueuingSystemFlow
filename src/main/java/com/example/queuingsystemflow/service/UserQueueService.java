@@ -45,7 +45,7 @@ public class UserQueueService {
             .count();
     }
 
-    // 진입이 가능한 상태인지 조회
+    // 진입이 가능한 상태인지 조회 (특정 사용자가 진입 가능 큐에 존재하는지 확인)
     public Mono<Boolean> isAllowed(final String queue, final Long userId) {
         return reactiveRedisTemplate.opsForZSet().rank(USER_QUEUE_PROCEED_KEY.formatted(queue), userId.toString())
             .defaultIfEmpty(-1L) // 값이 없다면 -1 리턴 (등록되지 않음)
