@@ -2,6 +2,7 @@ package com.example.queuingsystemflow.controller;
 
 import com.example.queuingsystemflow.dto.AllowUserResponse;
 import com.example.queuingsystemflow.dto.AllowedUserResponse;
+import com.example.queuingsystemflow.dto.RankNumberResponse;
 import com.example.queuingsystemflow.dto.RegisterUserResponse;
 import com.example.queuingsystemflow.service.UserQueueService;
 import lombok.RequiredArgsConstructor;
@@ -43,5 +44,12 @@ public class UserQueueController {
             .map(AllowedUserResponse::new);
     }
 
-
+    @GetMapping("/rank")
+    public Mono<RankNumberResponse> getUserRank(
+        @RequestParam(name = "user_id") Long userId,
+        @RequestParam(defaultValue = "default") String queue
+    ) {
+        return userQueueService.getRank(queue, userId)
+            .map(RankNumberResponse::new);
+    }
 }
