@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 
 import static com.example.queuingsystemflow.exception.ErrorCode.QUEUE_ALREADY_REGISTERED_USER;
@@ -62,10 +65,39 @@ public class UserQueueService {
             .map(rank -> rank >= 0); // rank가 0보다 크다면 등록된 것으로 간주
     }
 
+    // 토큰을 통해 접속 가능 여부 조회
+    public Mono<Boolean> isAllowedByToken(final String queue, final Long userId, final String token) {
+        return this.generateToken(queue, userId)
+            .filter(gen -> gen.equalsIgnoreCase(token))
+            .map(i -> true) // 토큰 값이 같다면 true 리턴 (토큰 검증 성공)
+            .defaultIfEmpty(false);
+    }
+
     public Mono<Long> getRank(final String queue, final Long userId) {
         return reactiveRedisTemplate.opsForZSet().rank(USER_QUEUE_WAIT_KEY.formatted(queue), userId.toString())
             .defaultIfEmpty(-1L) // 값이 없다면 -1 리턴 (등록되지 않음)
             .map(rank -> rank >= 0 ? rank + 1 : rank); // ex. 0번째 대기자 -> 1번째 대기자
+    }
+
+    public Mono<String> generateToken(final String queue, final Long userId)  {
+        // sha256 해시 데이터 생성
+        MessageDigest digest = null;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+
+            var input = "user-queue-%s-%d".formatted(queue, userId); // token 생성 문자열
+            byte[] encodeHash = digest.digest(input.getBytes(StandardCharsets.UTF_8)); // 해시 값 생성
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte aByte : encodeHash) { // byte를 하나씩 hex 포멧으로 추가
+                hexString.append(String.format("%02x", aByte));
+            }
+
+            return Mono.just(hexString.toString());
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Scheduled(initialDelay = 5000, fixedDelay = 3000) // 서버 시작 후 5초 이후부터 스케쥴 동작, 3초 주기로 아래 메소드 실행
