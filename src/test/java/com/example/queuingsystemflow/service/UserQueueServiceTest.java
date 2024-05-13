@@ -3,6 +3,7 @@ package com.example.queuingsystemflow.service;
 import com.example.queuingsystemflow.EmbeddedRedis;
 import com.example.queuingsystemflow.exception.ApplicationException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -148,6 +149,29 @@ class UserQueueServiceTest {
     void emptyRank() {
         StepVerifier.create(userQueueService.getRank("default", 100L))
             .expectNext(-1L)
+            .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("토큰 값이 유효하지 않은 경우")
+    void isNotAllowedByToken() {
+        StepVerifier.create(userQueueService.isAllowedByToken("default", 100L, ""))
+            .expectNext(false)
+            .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("토큰 값이 유효한 경우")
+    void isAllowedByToken() {
+        StepVerifier.create(userQueueService.isAllowedByToken("default", 100L, "d333a5d4eb24f3f5cdd767d79b8c01aad3cd73d3537c70dec430455d37afe4b8"))
+            .expectNext(true)
+            .verifyComplete();
+    }
+
+    @Test
+    void generateToken() {
+        StepVerifier.create(userQueueService.generateToken("default", 100L))
+            .expectNext("d333a5d4eb24f3f5cdd767d79b8c01aad3cd73d3537c70dec430455d37afe4b8")
             .verifyComplete();
     }
 }
