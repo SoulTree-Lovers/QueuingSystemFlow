@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.result.view.Rendering;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Controller
@@ -18,10 +19,15 @@ public class WaitingRoomController {
     Mono<Rendering> waitingRoomPage(
         @RequestParam(name = "queue", defaultValue = "default") String queue,
         @RequestParam(name = "user_id") Long userId,
-        @RequestParam(name = "redirect_url") String redirectUrl
+        @RequestParam(name = "redirect_url") String redirectUrl,
+        ServerWebExchange exchange
     ) {
+        var tokenKey = "user-queue-%s-token".formatted(queue); // 토큰 키 생성
+        var cookieValue = exchange.getRequest().getCookies().getFirst(tokenKey); // 쿠키 가져오기
+        var token = cookieValue == null ? "" : cookieValue.getValue(); // 쿠키 값이 있다면 토큰 값 가져오기
+
         // 1. 입장이 허용되어 page redirect(이동)가 가능한 상태인가?
-        return userQueueService.isAllowed(queue, userId)
+        return userQueueService.isAllowedByToken(queue, userId, token)
             .filter(allowed -> allowed) // 입장이 허용된다면
             // 2. 어디로 이동해야 하는가?
             .flatMap(allowed -> Mono.just(Rendering.redirectTo(redirectUrl).build())) // 페이지 이동
