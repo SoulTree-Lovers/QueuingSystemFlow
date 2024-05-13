@@ -44,25 +44,26 @@
         fetch('/api/v1/queue/rank?' + queryParam)
             .then(response => response.json())
             .then(data => {
-                if(data.rank < 0) {
-                    fetch('/api/v1/queue/touch?' + queryParam)
-                        .then(response => {
-                            document.querySelector('#number').innerHTML = 0;
-                            document.querySelector('#updated').innerHTML = new Date();
+                if (data.rank < 0) {
+                    document.querySelector('#number').innerHTML = 0;
+                    document.querySelector('#updated').innerHTML = new Date();
 
-                            const newUrl = window.location.origin + window.location.pathname + window.location.search;
-                            window.location.href = newUrl;
-                        })
-                        .catch(error => console.error(error));
-                    return;
+                    // 대기 순번이 모두 소모되면 현재 페이지를 리플레쉬
+                    const newUrl = window.location.origin + window.location.pathname + window.location.search;
+                    window.location.href = newUrl;
+                    return ;
                 }
+
                 document.querySelector('#number').innerHTML = data.rank;
                 document.querySelector('#updated').innerHTML = new Date();
             })
             .catch(error => console.error(error));
     }
 
-    setInterval(fetchWaitingRank, 3000);
+    setInterval(fetchWaitingRank, 3000); // 3초에 한 번씩 대기 번호 호출
+
+
+
 </script>
 </body>
 </html>
