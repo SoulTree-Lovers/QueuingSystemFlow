@@ -51,4 +51,10 @@ public class UserQueueService {
             .defaultIfEmpty(-1L) // 값이 없다면 -1 리턴 (등록되지 않음)
             .map(rank -> rank >= 0); // rank가 0보다 크다면 등록된 것으로 간주
     }
+
+    public Mono<Long> getRank(final String queue, final Long userId) {
+        return reactiveRedisTemplate.opsForZSet().rank(USER_QUEUE_WAIT_KEY.formatted(queue), userId.toString())
+            .defaultIfEmpty(-1L) // 값이 없다면 -1 리턴 (등록되지 않음)
+            .map(rank -> rank >= 0 ? rank + 1 : rank); // ex. 0번째 대기자 -> 1번째 대기자
+    }
 }
