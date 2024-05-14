@@ -109,7 +109,7 @@ public class UserQueueService {
 
         log.info("called scheduling ...");
 
-        Long maxAllowUserCount = 3L; // 한 번에 허용시킬 유저 수
+        Long maxAllowUserCount = 100L; // 한 번에 허용시킬 유저 수
 
         // 사용자를 허용하는 로직
         reactiveRedisTemplate.scan(ScanOptions.scanOptions()
