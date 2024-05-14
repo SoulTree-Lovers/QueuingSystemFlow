@@ -40,11 +40,12 @@ public class UserQueueController {
     }
 
     @GetMapping("/allowed")
-    public Mono<?> isAllowedUser(
+    public Mono<AllowedUserResponse> isAllowedUser(
         @RequestParam(name = "user_id") Long userId,
-        @RequestParam(defaultValue = "default") String queue
+        @RequestParam(defaultValue = "default") String queue,
+        @RequestParam(name = "token") String token
     ) {
-        return userQueueService.isAllowed(queue, userId)
+        return userQueueService.isAllowedByToken(queue, userId, token)
             .map(AllowedUserResponse::new);
     }
 
